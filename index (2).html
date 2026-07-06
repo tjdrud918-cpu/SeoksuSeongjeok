@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결시생 성적 인정점 산출기</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- KaTeX CSS & JS (수식 렌더링용) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Pretendard', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-indigo-600 text-white p-2 rounded-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-base font-extrabold text-slate-900 leading-tight md:text-lg">결시생 성적 인정점 산출기</h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-slate-200 mb-6 space-x-6">
+            <button onclick="switchTab('single')" id="tab-single" class="tab-btn py-3 px-1 border-b-2 border-indigo-600 text-indigo-600 font-semibold text-sm flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span>단일 학생 계산 대시보드</span>
+            </button>
+            <button onclick="switchTab('batch')" id="tab-batch" class="tab-btn py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span>학급/과목 일괄 산출</span>
+            </button>
+            <button onclick="switchTab('guide')" id="tab-guide" class="tab-btn py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <span>산출 공식 레퍼런스</span>
+            </button>
+        </div>
+
+        <!-- TAB 1: SINGLE CALC -->
+        <div id="view-single" class="tab-view space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Inputs Section -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                    <h2 class="text-base font-bold text-slate-900 border-b pb-3 flex items-center justify-between">
+                        <span class="flex items-center">
+                            <span class="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-1 rounded-md mr-2 font-mono">INPUT</span>
+                            정보 대입 및 설정
+                        </span>
+                        <!-- 수행평가 평균 도우미 버튼 -->
+                        <button onclick="openHelperModal('single')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] px-2.5 py-1 rounded-md border border-slate-300 font-medium transition flex items-center space-x-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
+                            </svg>
+                            <span>수행평균 계산기</span>
+                        </button>
+                    </h2>
+                    
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">성적 산출 구분</label>
+                        <select id="s-calcType" onchange="toggleSingleCalcType()" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white font-medium text-sm text-slate-800">
+                            <option value="all-absent" selected>모두 결시</option>
+                            <option value="general">일반 결시</option>
+                            <option value="unexcused">미인정 결시</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">학번</label>
+                            <input type="text" id="s-num" value="20123" oninput="calculateSingle()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">학생명</label>
+                            <input type="text" id="s-name" value="이수희" oninput="calculateSingle()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold">
+                        </div>
+                    </div>
+
+                    <!-- TYPE B: 모두결시 입력창 (수행연계) -->
+                    <div id="grp-all-absent" class="space-y-4">
+                        <div class="bg-indigo-50/50 p-3 rounded-lg border border-indigo-100 text-[11px] text-indigo-950 leading-normal">
+                            정기시험 성적이 없는 과목으로, 수행평가 점수 비율을 대입하여 연계 보정합니다.
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">수행평가 학생 원득점</label>
+                                <input type="number" id="s-perfScore" value="16" oninput="calculateSingle()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1 flex justify-between items-center">
+                                    <span>수행평가 학년 평균</span>
+                                </label>
+                                <input type="number" id="s-perfGradeAvg" value="39" step="0.1" oninput="calculateSingle()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono">
+                                <span class="text-[9px] text-slate-400 mt-0.5 block">※ 입력 시 소수점 둘째자리 자동 반올림 적용</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">정기시험 학년 평균</label>
+                                <input type="number" id="s-examGradeAvg" value="55.69" step="0.01" oninput="calculateSingle()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono">
+                                <span class="text-[9px] text-slate-400 mt-0.5 block">※ 소수점 셋째자리 반올림값</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">과목 만점</label>
+                                <input type="number" id="s-perfectScoreAll" value="100" oninput="calculateSingle()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TYPE A: 일반결시 입력창 -->
+                    <div id="grp-general" class="hidden space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">기준고사 점수</label>
+                                <input type="number" id="s-baseScore" value="85" oninput="calculateSingle()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">과목 만점</label>
+                                <input type="number" id="s-perfectScore" value="100" oninput="calculateSingle()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">보정 수식 방식</label>
+                            <div class="space-y-1.5 mt-1">
+                                <label class="flex items-center space-x-2 text-xs cursor-pointer">
+                                    <input type="radio" name="s-formula" value="simple" checked onchange="toggleSingleFormula()" class="text-indigo-600 focus:ring-indigo-500">
+                                    <span><strong>단순 비율</strong> (기준고사 × 인정비율)</span>
+                                </label>
+                                <label class="flex items-center space-x-2 text-xs cursor-pointer">
+                                    <input type="radio" name="s-formula" value="adjusted" onchange="toggleSingleFormula()" class="text-indigo-600 focus:ring-indigo-500">
+                                    <span><strong>난이도 평균 보정</strong> (평균 연계 반영)</span>
+                                </label>
+                            </div>
+                        </div>
+                        <!-- 난이도 보정 세부입력 -->
+                        <div id="s-adjusted-fields" class="hidden grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                            <div>
+                                <label class="block text-[10px] font-medium text-slate-600 mb-0.5">기준고사 평균</label>
+                                <input type="number" id="s-baseAvg" value="65" oninput="calculateSingle()" class="w-full px-2 py-1 text-xs border border-slate-300 rounded font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-medium text-slate-600 mb-0.5">결시고사 평균</label>
+                                <input type="number" id="s-absentAvg" value="70" oninput="calculateSingle()" class="w-full px-2 py-1 text-xs border border-slate-300 rounded font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TYPE C: 미인정결시 입력창 -->
+                    <div id="grp-unexcused" class="hidden space-y-4">
+                        <div class="bg-amber-50 p-3 rounded-lg border border-amber-200 text-[11px] text-amber-900 leading-normal">
+                            지침 규정: 당해 정기시험 과목 최하점에서 <strong>1점을 감점</strong>하여 부여합니다.
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">정기시험 과목 최하점</label>
+                            <input type="number" id="s-lowestScore" value="8" oninput="calculateSingle()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono">
+                        </div>
+                    </div>
+
+                    <!-- 인정비율 설정 (100%, 80%, 직접 입력) -->
+                    <div id="grp-rate">
+                        <label class="block text-xs font-medium text-slate-700 mb-1">인정비율</label>
+                        <select id="s-reason" onchange="updateCustomRate('s')" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm text-slate-800">
+                            <option value="100">100%</option>
+                            <option value="80" selected>80%</option>
+                            <option value="custom">직접 비율 입력</option>
+                        </select>
+                        <div id="s-customRateContainer" class="hidden mt-2">
+                            <label class="block text-xs font-medium text-slate-600 mb-1">인정비율 직접 입력 (%)</label>
+                            <input type="number" id="s-customRate" value="80" min="0" max="100" oninput="calculateSingle()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono">
+                        </div>
+                    </div>
+
+                    <!-- 소수점 최종 처리방식 (참고용) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">최종 인정점 소수점 끝자리 규정</label>
+                        <select id="s-rounding" onchange="calculateSingle()" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm text-slate-800">
+                            <option value="2" selected>소수점 셋째 자리에서 반올림 (둘째 자리 표기)</option>
+                            <option value="1">소수점 둘째 자리에서 반올림 (첫째 자리 표기)</option>
+                            <option value="0">소수점 첫째 자리에서 반올림 (정수 표기)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Outputs Section -->
+                <div class="lg:col-span-7 space-y-6">
+                    <!-- Main Calculation Status Card -->
+                    <div class="bg-gradient-to-br from-indigo-900 to-indigo-950 p-6 rounded-2xl text-white shadow-md relative overflow-hidden">
+                        <div class="absolute -right-12 -bottom-12 opacity-10 text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-48 h-48" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div class="relative z-10 space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 text-[10px] px-2.5 py-1 rounded-md font-semibold tracking-wider uppercase">실시간 산출 대시보드</span>
+                                <span class="text-xs text-indigo-300" id="s-res-student-tag">학번 20123 이수희</span>
+                            </div>
+                            
+                            <!-- 원본 확인과 반올림 비교 노출 영역 -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-indigo-800 pb-4">
+                                <div>
+                                    <span class="text-[10px] text-indigo-300 block mb-0.5">① 원본 계산 결과값 (미반올림)</span>
+                                    <div class="text-3xl font-extrabold tracking-tight text-indigo-100 font-mono" id="s-res-raw-score">
+                                        18.277948...
+                                    </div>
+                                </div>
+                                <div class="bg-indigo-800/40 p-2.5 rounded-lg border border-indigo-700">
+                                    <span class="text-[10px] text-indigo-200 block mb-0.5">② 최종 반올림 적용 인정점</span>
+                                    <div class="flex items-baseline space-x-1">
+                                        <span class="text-4xl font-black text-emerald-400 font-mono" id="s-res-final-score">18.28</span>
+                                        <span class="text-sm font-bold text-emerald-300">점</span>
+                                        <span class="text-[10px] text-rose-300 font-medium hidden ml-1" id="s-res-capped-lbl">(만점제한)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="pt-1">
+                                <p class="text-[11px] text-indigo-300" id="s-res-formula-desc">수행평가 원득점 기반 정기시험 교차 환산 수식 대입 결과</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step-by-Step Mathematical Derivation -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h3 class="text-sm font-bold text-slate-900 border-l-4 border-indigo-600 pl-2">상세 수학적 연산 흐름</h3>
+                        
+                        <div class="space-y-4">
+                            <!-- Raw Value Definition -->
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
+                                <span class="text-xs font-bold text-slate-500 block">1단계: 대입 인자 소수점 선행 규정 보정</span>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs leading-relaxed text-slate-600" id="s-res-preround-log">
+                                    <!-- Dynamic step list -->
+                                </div>
+                            </div>
+
+                            <!-- KaTeX Math Equation Area -->
+                            <div class="bg-slate-50 p-5 rounded-xl border border-indigo-50 flex flex-col items-center justify-center min-h-[100px]">
+                                <span class="text-[11px] font-semibold text-slate-400 mb-3 uppercase tracking-wider">2단계: 산출 공식 적용 상태 (정밀 원 계산)</span>
+                                <div id="s-res-katex-formula" class="overflow-x-auto w-full text-center py-2">
+                                    <!-- LaTeX Equation here -->
+                                </div>
+                            </div>
+
+                            <!-- Final Rounding Step -->
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
+                                <span class="text-xs font-bold text-slate-500 block">3단계: 최종 인정점 반올림 전후 검증</span>
+                                <div class="text-xs text-slate-600 space-y-1" id="s-res-rounding-log">
+                                    <!-- Final step text -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: BATCH CALC -->
+        <div id="view-batch" class="tab-view hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4 mb-6 gap-4">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">학급 / 과목별 정기시험 다수 결시생 일괄 관리</h2>
+                        <p class="text-xs text-slate-500">교과 회의나 일괄 기재용으로 사용하기 좋은 오프라인 테이블 관리 화면입니다.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="openHelperModal('batch')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3.5 py-2 rounded-lg border border-slate-300 font-bold transition flex items-center space-x-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01" />
+                            </svg>
+                            <span>수행평균 계산기</span>
+                        </button>
+                        <button onclick="addBatchRow()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-2 rounded-lg transition flex items-center space-x-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            <span>결시자 추가</span>
+                        </button>
+                        <button onclick="calculateBatch()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-lg transition flex items-center space-x-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <span>전체 인정점 산출</span>
+                        </button>
+                        <button onclick="exportBatchToCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs px-3.5 py-2 rounded-lg transition flex items-center space-x-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            <span>CSV 파일 다운로드</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Guidance note for batch -->
+                <div class="flex items-center justify-between gap-4 bg-indigo-50/40 p-4 rounded-xl mb-6 border border-indigo-100 text-xs">
+                    <div class="flex items-center space-x-2 text-indigo-900 font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>결과 열에 <b>[미반올림 원본값] → [최종 성적]</b>을 동시에 표시하여 오류를 직관적으로 검산할 수 있게 설계했습니다.</span>
+                    </div>
+                </div>
+
+                <!-- Dynamic Table -->
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="min-w-full divide-y divide-slate-200 text-left">
+                        <thead class="bg-slate-50 text-[11px] font-bold text-slate-600">
+                            <tr>
+                                <th scope="col" class="px-3 py-3 text-center w-12">No</th>
+                                <th scope="col" class="px-3 py-3 w-32">학번</th>
+                                <th scope="col" class="px-3 py-3 w-32">이름</th>
+                                <th scope="col" class="px-3 py-3 w-48">산출 구분</th>
+                                <th scope="col" class="px-3 py-3">세부 계산 입력 항목</th>
+                                <th scope="col" class="px-3 py-3 w-28 text-center">인정비율</th>
+                                <th scope="col" class="px-3 py-3 text-center">산출 부여 점수 (원본값 → 반올림점수)</th>
+                                <th scope="col" class="px-3 py-3 w-16 text-center">작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="batch-tbody" class="bg-white divide-y divide-slate-200 text-xs">
+                            <!-- Rows loaded dynamically by script -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: GUIDELINES -->
+        <div id="view-guide" class="tab-view hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Instruction Doc Details -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h2 class="text-base font-bold text-slate-900 border-b pb-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        교과 규정 및 연산 수식 가이드
+                    </h2>
+                    
+                    <div class="space-y-4 text-xs text-slate-600 leading-relaxed">
+                        <div class="space-y-2">
+                            <h4 class="font-bold text-slate-800 text-sm">1. 정기시험 모두결시생 성적 산출</h4>
+                            <p class="text-slate-600">
+                                정기시험을 모두 결시한 학생은 결시과목의 수행평가 원득점에 기반하여 산출합니다.
+                            </p>
+                            <div class="p-3.5 bg-slate-50 border rounded font-mono text-slate-800 leading-relaxed space-y-2">
+                                <span class="font-bold text-slate-700 block mb-1">■ 산출 원 수식:</span>
+                                <div class="bg-white p-2 text-center text-indigo-700 font-bold border rounded">
+                                    인정점 = 수행평가 원득점 × (정기시험 학년평균 / 수행평가 학년평균) × 인정비율(%)
+                                </div>
+                                <span class="font-bold text-slate-700 block mt-2">■ 규정 세부 보정 규칙 (PDF 지침):</span>
+                                <li class="ml-2"><strong>수행평가 학년 평균:</strong> 소수점 둘째 자리에서 반올림하여 첫째 자리까지 표기한 후 계산에 사용</li>
+                                <li class="ml-2"><strong>정기시험 학년 평균:</strong> 소수점 셋째 자리에서 반올림하여 둘째 자리까지 표기한 후 계산에 사용</li>
+                                <li class="ml-2"><strong>최종 산출 인정점:</strong> 소수점 셋째 자리에서 반올림하여 둘째 자리까지 표기하여 부여</li>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <h4 class="font-bold text-slate-800 text-sm">2. 미인정결시생 성적 산출</h4>
+                            <p class="text-slate-600">
+                                미인정 결시생은 동일 학년 정기시험당해 과목의 최하점 기준에서 감점(1점)을 부여하여 공평성을 유지합니다.
+                            </p>
+                            <div class="p-3.5 bg-slate-50 border rounded font-mono text-slate-800 space-y-2">
+                                <div class="bg-white p-2 text-center text-indigo-700 font-bold border rounded">
+                                    부여 점수 = 정기시험 해당 과목 최하점 - 1
+                                </div>
+                                <span class="text-[11px] text-slate-400 block mt-1">※ 산정 점수가 0점 미만이 될 경우 최하 한도는 0점으로 자동 규제됩니다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guidance Rules -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h2 class="text-lg font-bold text-slate-900 border-b pb-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        데이터 정밀성 및 주의 사항
+                    </h2>
+                    
+                    <div class="space-y-3 text-xs text-slate-600">
+                        <div class="p-3 bg-amber-50/60 rounded-lg border border-amber-200">
+                            <h4 class="font-bold text-amber-800 mb-1">과목 만점 초과 한계 설정</h4>
+                            <p class="text-amber-700">
+                                연산 공식에 대입하여 산출된 임시 최종 인정점이 과목 만점(일반적으로 100점)을 초과할 수 있습니다. 지침 규정에 따라 만점 초과 시에는 만점을 최종 부여 점수로 자동 강제 조정합니다.
+                            </p>
+                        </div>
+
+                        <div class="p-3 bg-indigo-50/60 rounded-lg border border-indigo-200">
+                            <h4 class="font-bold text-indigo-800 mb-1">소수점 처리의 일관성 보증</h4>
+                            <p class="text-indigo-700">
+                                단일 연산 및 학급/과목별 테이블 일괄 연산 시, 설정에 부합하는 소수점 끝자리 반올림 방식(소수점 셋째 자리 반올림, 둘째 자리 표기)이 완전히 동일하게 반영되도록 시스템 설계가 연동되어 있습니다.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 수행평가 학년 평균점수 계산 모달 도구 (Helper Modal) -->
+    <div id="helper-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-base font-bold text-slate-900 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-600 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01" />
+                    </svg>
+                    수행평가 평균점수 도우미
+                </h3>
+                <button onclick="closeHelperModal()" class="text-slate-400 hover:text-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+            
+            <p class="text-xs text-slate-500 leading-normal">
+                수행평가 항목별 학년 총합계 점수와 실제 응시자 수를 입력하면, <b>소수점 둘째 자리에서 반올림(첫째 자리 표기)</b> 규정에 맞춰 수행평가 학년 평균점수를 즉시 환산해 줍니다.
+            </p>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">학년 전체 총합 점수</label>
+                    <input type="number" id="m-totalScore" placeholder="예: 7800" oninput="calculateHelperScore()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">학년 전체 응시생 수 (명)</label>
+                    <input type="number" id="m-studentCount" placeholder="예: 200" oninput="calculateHelperScore()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-500">
+                </div>
+                
+                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100/50 text-center">
+                    <span class="text-[10px] text-indigo-700 font-bold block uppercase tracking-wider mb-1">계산된 수행평가 학년 평균</span>
+                    <span id="m-resultScore" class="text-2xl font-black text-indigo-950 font-mono">-</span>
+                </div>
+            </div>
+
+            <div class="flex space-x-2 pt-2">
+                <button onclick="applyHelperValue()" class="flex-grow bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-xs transition">
+                    계산값 대입하기
+                </button>
+                <button onclick="closeHelperModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg text-xs transition">
+                    취소
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500">
+            <p>© 2026 정기시험 결시생 교과 성적 인정점 산출 시스템</p>
+            <p class="mt-1 text-slate-400">교사 평가 업무 보조용 전문 연산 소프트웨어입니다.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Default Dynamic Students for Batch Calculator (Based on Page 1 tables in PDF)
+        let batchStudents = [
+            { id: 1, num: '20123', name: '이수희', type: 'all-absent', variable1: 16, variable2: 39, variable3: 55.69, variable4: 100, reason: '80', result: '-' },
+            { id: 2, num: '30105', name: '김동한', type: 'unexcused', variable1: 8, variable2: 0, variable3: 0, variable4: 0, reason: '0', result: '-' },
+            { id: 3, num: '20101', name: '정지필', type: 'general', variable1: 85, variable2: 100, variable3: 65, variable4: 70, reason: '80', result: '-' }
+        ];
+
+        // Modal context state
+        let modalContext = 'single'; // 'single' or 'batch'
+        let targetBatchStudentId = null;
+
+        window.onload = function() {
+            toggleSingleCalcType();
+            renderBatchTable();
+            calculateSingle();
+        };
+
+        // Navigation Switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-view').forEach(view => view.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-indigo-600', 'text-indigo-600', 'font-semibold');
+                btn.classList.add('border-transparent', 'text-slate-500', 'font-medium');
+            });
+
+            const targetView = document.getElementById(`view-${tabId}`);
+            if (targetView) targetView.classList.remove('hidden');
+            
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('border-indigo-600', 'text-indigo-600', 'font-semibold');
+                activeBtn.classList.remove('border-transparent', 'text-slate-500', 'font-medium');
+            }
+        }
+
+        // Toggle Single Inputs depending on Calculation Type
+        function toggleSingleCalcType() {
+            const typeEl = document.getElementById('s-calcType');
+            if (!typeEl) return;
+            const type = typeEl.value;
+            
+            const grpGeneral = document.getElementById('grp-general');
+            const grpAllAbsent = document.getElementById('grp-all-absent');
+            const grpUnexcused = document.getElementById('grp-unexcused');
+            const grpRate = document.getElementById('grp-rate');
+
+            if (grpGeneral) grpGeneral.classList.add('hidden');
+            if (grpAllAbsent) grpAllAbsent.classList.add('hidden');
+            if (grpUnexcused) grpUnexcused.classList.add('hidden');
+            if (grpRate) grpRate.classList.remove('hidden');
+
+            if (type === 'general') {
+                if (grpGeneral) grpGeneral.classList.remove('hidden');
+                toggleSingleFormula();
+            } else if (type === 'all-absent') {
+                if (grpAllAbsent) grpAllAbsent.classList.remove('hidden');
+            } else if (type === 'unexcused') {
+                if (grpUnexcused) grpUnexcused.classList.remove('hidden');
+                if (grpRate) grpRate.classList.add('hidden');
+            }
+            calculateSingle();
+        }
+
+        function toggleSingleFormula() {
+            const formulaEl = document.querySelector('input[name="s-formula"]:checked');
+            const formula = formulaEl ? formulaEl.value : 'simple';
+            const adjustedFields = document.getElementById('s-adjusted-fields');
+            if (adjustedFields) {
+                if (formula === 'adjusted') {
+                    adjustedFields.classList.remove('hidden');
+                } else {
+                    adjustedFields.classList.add('hidden');
+                }
+            }
+            calculateSingle();
+        }
+
+        function updateCustomRate(prefix) {
+            const selectEl = document.getElementById(`${prefix}-reason`);
+            const customContainer = document.getElementById(`${prefix}-customRateContainer`);
+            if (selectEl && customContainer) {
+                if (selectEl.value === 'custom') {
+                    customContainer.classList.remove('hidden');
+                } else {
+                    customContainer.classList.add('hidden');
+                }
+            }
+            if (prefix === 's') calculateSingle();
+        }
+
+        // Rounding Logic - 규정에 맞춘 소수점 반올림 처리
+        function applyRounding(val, decimalPlaces = 2) {
+            const factor = Math.pow(10, decimalPlaces);
+            return Math.round(val * factor) / factor;
+        }
+
+        // Helper: Pre-round average values as required by PDF Guidelines (수행평가는 소수점 둘째 자리 반올림하여 첫째 자리 표기)
+        function preRoundPerfAverage(val) {
+            return Math.round(val * 10) / 10;
+        }
+
+        // 정기시험 학년 평균점수는 소수점 셋째 자리에서 반올림하여 둘째 자리까지 표기
+        function preRoundExamAverage(val) {
+            return Math.round(val * 100) / 100;
+        }
+
+        // Main Score Logic for Single Student
+        function calculateSingle() {
+            const typeEl = document.getElementById('s-calcType');
+            if (!typeEl) return;
+            const type = typeEl.value;
+
+            const nameEl = document.getElementById('s-name');
+            const name = nameEl ? nameEl.value : "이수희";
+
+            const numEl = document.getElementById('s-num');
+            const num = numEl ? numEl.value : "20123";
+
+            const roundSelectEl = document.getElementById('s-rounding');
+            const roundSelect = roundSelectEl ? parseInt(roundSelectEl.value) : 2;
+
+            // Fetch reason rate
+            let rate = 100;
+            if (type !== 'unexcused') {
+                const reasonSelectEl = document.getElementById('s-reason');
+                const reasonSelect = reasonSelectEl ? reasonSelectEl.value : '80';
+                if (reasonSelect === 'custom') {
+                    const customRateEl = document.getElementById('s-customRate');
+                    rate = customRateEl ? (parseFloat(customRateEl.value) || 100) : 80;
+                } else {
+                    rate = parseFloat(reasonSelect) || 80;
+                }
+            }
+
+            let rawScore = 0;
+            let finalScore = 0;
+            let cap = 100;
+            let formulaDesc = "";
+            
+            // Log/Step storage
+            let preroundLogHtml = "";
+            let latexFormula = "";
+            let roundingLogHtml = "";
+
+            if (type === 'general') {
+                const baseScoreEl = document.getElementById('s-baseScore');
+                const baseScore = baseScoreEl ? (parseFloat(baseScoreEl.value) || 0) : 0;
+
+                const perfectScoreEl = document.getElementById('s-perfectScore');
+                cap = perfectScoreEl ? (parseFloat(perfectScoreEl.value) || 100) : 100;
+
+                const formulaEl = document.querySelector('input[name="s-formula"]:checked');
+                const formula = formulaEl ? formulaEl.value : 'simple';
+
+                if (formula === 'simple') {
+                    rawScore = baseScore * (rate / 100);
+                    formulaDesc = `정기시험 기준 원득점 단순 비율 반영 인정비율 ${rate}% 대입`;
+                    
+                    preroundLogHtml = `
+                        <div>• 대입 기준 정기시험 점수: <b class="text-slate-800">${baseScore}점</b></div>
+                        <div>• 대입 인정비율: <b class="text-slate-800">${rate}%</b></div>
+                    `;
+                    latexFormula = `\\text{인정점} = ${baseScore} \\times \\frac{${rate}}{100} = ${rawScore.toFixed(4)}`;
+                } else {
+                    const baseAvgEl = document.getElementById('s-baseAvg');
+                    const baseAvg = baseAvgEl ? (parseFloat(baseAvgEl.value) || 1) : 1;
+
+                    const absentAvgEl = document.getElementById('s-absentAvg');
+                    const absentAvg = absentAvgEl ? (parseFloat(absentAvgEl.value) || 1) : 1;
+                    
+                    const roundedBaseAvg = preRoundExamAverage(baseAvg);
+                    const roundedAbsentAvg = preRoundExamAverage(absentAvg);
+
+                    rawScore = baseScore * (roundedAbsentAvg / roundedBaseAvg) * (rate / 100);
+                    formulaDesc = `난이도보정 수식 (기준평균: ${roundedBaseAvg}점, 결시평균: ${roundedAbsentAvg}점, 비율: ${rate}%) 적용`;
+                    
+                    preroundLogHtml = `
+                        <div>• 기준 정기시험 점수: <b class="text-slate-800">${baseScore}점</b></div>
+                        <div>• 기준 고사 평균: <b class="text-slate-800">${roundedBaseAvg}점</b> (소수점 셋째자리 반올림)</div>
+                        <div>• 결시 고사 평균: <b class="text-slate-800">${roundedAbsentAvg}점</b> (소수점 셋째자리 반올림)</div>
+                        <div>• 인정비율: <b class="text-slate-800">${rate}%</b></div>
+                    `;
+                    latexFormula = `\\text{인정점} = ${baseScore} \\times \\left( \\frac{${roundedAbsentAvg}}{${roundedBaseAvg}} \\right) \\times \\frac{${rate}}{100} = ${rawScore.toFixed(4)}`;
+                }
+            } else if (type === 'all-absent') {
+                const perfScoreEl = document.getElementById('s-perfScore');
+                const perfScore = perfScoreEl ? (parseFloat(perfScoreEl.value) || 0) : 0;
+
+                const perfGradeAvgEl = document.getElementById('s-perfGradeAvg');
+                const perfGradeAvg = perfGradeAvgEl ? (parseFloat(perfGradeAvgEl.value) || 1) : 1;
+
+                const examGradeAvgEl = document.getElementById('s-examGradeAvg');
+                const examGradeAvg = examGradeAvgEl ? (parseFloat(examGradeAvgEl.value) || 1) : 1;
+
+                const perfectScoreAllEl = document.getElementById('s-perfectScoreAll');
+                cap = perfectScoreAllEl ? (parseFloat(perfectScoreAllEl.value) || 100) : 100;
+
+                const roundedPerfGradeAvg = preRoundPerfAverage(perfGradeAvg);
+                const roundedExamGradeAvg = preRoundExamAverage(examGradeAvg);
+
+                rawScore = perfScore * (roundedExamGradeAvg / roundedPerfGradeAvg) * (rate / 100);
+                formulaDesc = `모두결시 수행평가 환산 공식 [수행득점 × (정기평균 / 수행평균) × 비율] 적용`;
+
+                preroundLogHtml = `
+                    <div>• 수행평가 득점: <b class="text-slate-800">${perfScore}점</b></div>
+                    <div>• 수행 학년 평균 (지침): <b class="text-indigo-600">${roundedPerfGradeAvg}점</b> (소수점 둘째자리 반올림 보정 완료)</div>
+                    <div>• 정기시험 학년 평균: <b class="text-indigo-600">${roundedExamGradeAvg}점</b> (소수점 셋째자리 반올림)</div>
+                    <div>• 인정비율: <b class="text-slate-800">${rate}%</b></div>
+                `;
+                latexFormula = `\\text{인정점} = ${perfScore} \\times \\frac{${roundedExamGradeAvg}}{${roundedPerfGradeAvg}} \\times \\frac{${rate}}{100} = ${rawScore.toFixed(4)}`;
+            } else if (type === 'unexcused') {
+                const lowestScoreEl = document.getElementById('s-lowestScore');
+                const lowestScore = lowestScoreEl ? (parseFloat(lowestScoreEl.value) || 0) : 0;
+                cap = 100;
+
+                rawScore = lowestScore - 1;
+                if (rawScore < 0) rawScore = 0;
+
+                formulaDesc = `미인정 결시 규정 [당해고사 해당과목 최하점 - 1] 감점 적용`;
+                preroundLogHtml = `
+                    <div>• 정기시험 최하점: <b class="text-slate-800">${lowestScore}점</b></div>
+                    <div>• 규정 감점: <b class="text-slate-800">1점 감점</b></div>
+                `;
+                latexFormula = `\\text{인정점} = ${lowestScore} - 1 = ${rawScore}`;
+            }
+
+            // 원본 원점수 노출 (상한선 제한 전 원본값)
+            const rawScoreEl = document.getElementById('s-res-raw-score');
+            if (rawScoreEl) {
+                rawScoreEl.innerText = rawScore.toFixed(6) + " 점";
+            }
+
+            // Cap checks
+            let isCapped = false;
+            const cappedLbl = document.getElementById('s-res-capped-lbl');
+            if (rawScore > cap) {
+                finalScore = cap;
+                isCapped = true;
+                if (cappedLbl) cappedLbl.classList.remove('hidden');
+            } else {
+                finalScore = rawScore;
+                if (cappedLbl) cappedLbl.classList.add('hidden');
+            }
+
+            // Rounding process - 원본 실수를 육안 확인한 후 적용되는 반올림 결과
+            const roundedScore = applyRounding(finalScore, roundSelect);
+
+            // Update Single Status Panel
+            const resStudentTag = document.getElementById('s-res-student-tag');
+            if (resStudentTag) resStudentTag.innerText = `학번 ${num} ${name}`;
+
+            const resFinalScore = document.getElementById('s-res-final-score');
+            if (resFinalScore) resFinalScore.innerText = roundedScore.toFixed(roundSelect);
+
+            const resFormulaDesc = document.getElementById('s-res-formula-desc');
+            if (resFormulaDesc) resFormulaDesc.innerText = formulaDesc;
+
+            // Log rendering
+            const resPreroundLog = document.getElementById('s-res-preround-log');
+            if (resPreroundLog) resPreroundLog.innerHTML = preroundLogHtml;
+            
+            // Rounding description log
+            const roundTexts = ["첫째 자리", "둘째 자리", "셋째 자리"];
+            const roundTargetTexts = ["정수", "첫째", "둘째"];
+            roundingLogHtml = `
+                <div class="text-slate-600 font-medium">① 수식 대입 원본 연산값: <span class="font-mono bg-slate-100 text-indigo-700 px-1.5 py-0.5 rounded font-bold">${rawScore.toFixed(6)} 점</span></div>
+                ${isCapped ? `<div class="text-rose-500 font-semibold">• [경고] 연산값(${rawScore.toFixed(4)}점)이 과목 만점(${cap}점)을 초과하여 최종 연산 대상은 ${cap}점으로 자동 상한 조정되었습니다.</div>` : ''}
+                <div class="mt-1.5 text-slate-700">② 소수점 반올림 연산 처리 검증:</div>
+                <div class="ml-4 font-mono text-slate-500 text-xs">
+                    ${isCapped ? cap : rawScore.toFixed(6)} 점 $\\xrightarrow{\\text{소수점 ${roundTexts[roundSelect]} 반올림}}$ <span class="text-emerald-600 font-bold bg-emerald-50 px-1 rounded">${roundedScore.toFixed(roundSelect)} 점</span>
+                </div>
+                <div class="text-slate-800 font-bold mt-2 border-t border-slate-200/60 pt-2 flex items-center space-x-2">
+                    <span class="bg-indigo-100 text-indigo-800 text-[10px] px-1.5 py-0.5 rounded">검산 완료</span>
+                    <span>최종 반올림 인정점: <span class="text-indigo-600 font-mono text-base">${roundedScore.toFixed(roundSelect)} 점</span></span>
+                </div>
+            `;
+            const resRoundingLog = document.getElementById('s-res-rounding-log');
+            if (resRoundingLog) {
+                resRoundingLog.innerHTML = roundingLogHtml;
+                // KaTeX 가이드라인 렌더링
+                try {
+                    const mathSpans = resRoundingLog.querySelectorAll('span');
+                    mathSpans.forEach(span => {
+                        if (span.innerText.includes('\\xrightarrow')) {
+                            katex.render(span.innerText.replace(/\$/g, ''), span, { throwOnError: false });
+                        }
+                    });
+                } catch (e) {}
+            }
+
+            // Render LaTeX dynamically for Stage 2
+            const resKatexFormula = document.getElementById('s-res-katex-formula');
+            if (resKatexFormula) {
+                try {
+                    katex.render(latexFormula, resKatexFormula, {
+                        throwOnError: false,
+                        displayMode: true
+                    });
+                } catch (err) {
+                    resKatexFormula.innerText = latexFormula;
+                }
+            }
+        }
+
+        // BATCH GRID FUNCTIONS
+        function renderBatchTable() {
+            const tbody = document.getElementById('batch-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            batchStudents.forEach((student, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+                
+                // Variable cell content adapts directly to calculation type
+                let inputsHtml = "";
+                if (student.type === 'general') {
+                    inputsHtml = `
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <span class="text-[10px] text-slate-400">기준점:</span>
+                            <input type="number" value="${student.variable1}" onchange="updateBatchField(${student.id}, 'variable1', this.value)" class="w-16 px-1.5 py-0.5 border rounded font-mono text-center font-medium">
+                            <span class="text-[10px] text-slate-400">만점:</span>
+                            <input type="number" value="${student.variable2}" onchange="updateBatchField(${student.id}, 'variable2', this.value)" class="w-16 px-1.5 py-0.5 border rounded font-mono text-center font-medium">
+                        </div>
+                    `;
+                } else if (student.type === 'all-absent') {
+                    inputsHtml = `
+                        <div class="grid grid-cols-2 gap-1 max-w-md">
+                            <div class="flex items-center space-x-1">
+                                <span class="text-[9px] text-slate-400">수행득점:</span>
+                                <input type="number" value="${student.variable1}" onchange="updateBatchField(${student.id}, 'variable1', this.value)" class="w-12 px-1 py-0.5 border rounded font-mono text-center text-[11px]">
+                            </div>
+                            <div class="flex items-center space-x-1" title="소수점 둘째자리 반올림하여 입력">
+                                <span class="text-[9px] text-slate-400">수행평균:</span>
+                                <input type="number" id="b-perf-avg-${student.id}" value="${student.variable2}" step="0.1" onchange="updateBatchField(${student.id}, 'variable2', this.value)" class="w-12 px-1 py-0.5 border rounded font-mono text-center text-[11px] bg-slate-50 font-medium">
+                                <button onclick="openHelperModal('batch', ${student.id})" class="text-indigo-600 hover:text-indigo-800" title="수행평균 계산도우미 열기">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-1" title="소수점 셋째자리 반올림하여 입력">
+                                <span class="text-[9px] text-slate-400">고사평균:</span>
+                                <input type="number" value="${student.variable3}" step="0.01" onchange="updateBatchField(${student.id}, 'variable3', this.value)" class="w-14 px-1 py-0.5 border rounded font-mono text-center text-[11px] bg-slate-50 font-medium">
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <span class="text-[9px] text-slate-400">만점:</span>
+                                <input type="number" value="${student.variable4}" onchange="updateBatchField(${student.id}, 'variable4', this.value)" class="w-12 px-1 py-0.5 border rounded font-mono text-center text-[11px] font-medium">
+                            </div>
+                        </div>
+                    `;
+                } else if (student.type === 'unexcused') {
+                    inputsHtml = `
+                        <div class="flex items-center space-x-2">
+                            <span class="text-[10px] text-slate-400">과목 최하점:</span>
+                            <input type="number" value="${student.variable1}" onchange="updateBatchField(${student.id}, 'variable1', this.value)" class="w-16 px-1.5 py-0.5 border rounded font-mono text-center font-medium">
+                        </div>
+                    `;
+                }
+
+                const rateSelectHtml = student.type === 'unexcused' ? `
+                    <div class="text-center text-slate-400 font-medium">-</div>
+                ` : `
+                    <select onchange="updateBatchField(${student.id}, 'reason', this.value)" class="w-full px-2 py-1 border rounded bg-white text-center font-medium">
+                        <option value="100" ${student.reason === '100' ? 'selected' : ''}>100%</option>
+                        <option value="80" ${student.reason === '80' ? 'selected' : ''}>80%</option>
+                    </select>
+                `;
+
+                tr.innerHTML = `
+                    <td class="px-3 py-3 text-center text-slate-400 font-mono">${index + 1}</td>
+                    <td class="px-3 py-3">
+                        <input type="text" value="${student.num}" onchange="updateBatchField(${student.id}, 'num', this.value)" class="w-full px-2 py-1 border rounded font-mono text-slate-800">
+                    </td>
+                    <td class="px-3 py-3">
+                        <input type="text" value="${student.name}" onchange="updateBatchField(${student.id}, 'name', this.value)" class="w-full px-2 py-1 border rounded text-slate-800 font-bold">
+                    </td>
+                    <td class="px-3 py-3">
+                        <select onchange="changeBatchType(${student.id}, this.value)" class="w-full px-2 py-1 border rounded bg-indigo-50 text-indigo-900 font-semibold focus:outline-none">
+                            <option value="all-absent" ${student.type === 'all-absent' ? 'selected' : ''}>모두결시</option>
+                            <option value="general" ${student.type === 'general' ? 'selected' : ''}>일반결시</option>
+                            <option value="unexcused" ${student.type === 'unexcused' ? 'selected' : ''}>미인정결시</option>
+                        </select>
+                    </td>
+                    <td class="px-3 py-3">
+                        ${inputsHtml}
+                    </td>
+                    <td class="px-3 py-3">
+                        ${rateSelectHtml}
+                    </td>
+                    <!-- 검산 원본값 -> 최종 반올림값 동시 출력 영역 -->
+                    <td class="px-3 py-3 text-center" id="b-res-${student.id}">
+                        ${student.result}
+                    </td>
+                    <td class="px-3 py-3 text-center">
+                        <button onclick="removeBatchRow(${student.id})" class="text-rose-500 hover:text-rose-700 transition font-medium">삭제</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function changeBatchType(id, newType) {
+            const student = batchStudents.find(s => s.id === id);
+            if (student) {
+                student.type = newType;
+                if (newType === 'general') {
+                    student.variable1 = 80;
+                    student.variable2 = 100;
+                    student.reason = '80';
+                } else if (newType === 'all-absent') {
+                    student.variable1 = 16;
+                    student.variable2 = 39;
+                    student.variable3 = 55.69;
+                    student.variable4 = 100;
+                    student.reason = '80';
+                } else if (newType === 'unexcused') {
+                    student.variable1 = 8;
+                    student.reason = '0';
+                }
+                student.result = '-';
+                renderBatchTable();
+            }
+        }
+
+        function updateBatchField(id, field, value) {
+            const student = batchStudents.find(s => s.id === id);
+            if (student) {
+                if (field === 'name' || field === 'num' || field === 'reason') {
+                    student[field] = value;
+                } else {
+                    student[field] = parseFloat(value) || 0;
+                }
+            }
+        }
+
+        function addBatchRow() {
+            const nextId = batchStudents.length > 0 ? Math.max(...batchStudents.map(s => s.id)) + 1 : 1;
+            batchStudents.push({
+                id: nextId,
+                num: `201${String(nextId).padStart(2, '0')}`,
+                name: `신규학생`,
+                type: 'all-absent',
+                variable1: 15,
+                variable2: 40,
+                variable3: 60.5,
+                variable4: 100,
+                reason: '80',
+                result: '-'
+            });
+            renderBatchTable();
+        }
+
+        function removeBatchRow(id) {
+            batchStudents = batchStudents.filter(s => s.id !== id);
+            renderBatchTable();
+        }
+
+        // Auto Calculate entire dynamic table
+        function calculateBatch() {
+            const roundSelectEl = document.getElementById('b-rounding');
+            const roundSelect = roundSelectEl ? parseInt(roundSelectEl.value) : 2;
+
+            batchStudents.forEach(student => {
+                let rawScore = 0;
+                let finalScore = 0;
+                let cap = 100;
+                const rate = parseFloat(student.reason) || 0;
+
+                if (student.type === 'general') {
+                    cap = student.variable2 || 100;
+                    rawScore = student.variable1 * (rate / 100);
+                } else if (student.type === 'all-absent') {
+                    const perfScore = student.variable1;
+                    const perfGradeAvg = student.variable2 || 1;
+                    const examGradeAvg = student.variable3 || 1;
+                    cap = student.variable4 || 100;
+
+                    // 수행평가 학년 평균점수는 소수점 둘째 자리에서 반올림하여 첫째 자리까지 표기한 후 계산 적용
+                    const roundedPerfGradeAvg = preRoundPerfAverage(perfGradeAvg);
+                    const roundedExamGradeAvg = preRoundExamAverage(examGradeAvg);
+
+                    rawScore = perfScore * (roundedExamGradeAvg / roundedPerfGradeAvg) * (rate / 100);
+                } else if (student.type === 'unexcused') {
+                    const lowestScore = student.variable1;
+                    rawScore = lowestScore - 1;
+                    if (rawScore < 0) rawScore = 0;
+                    cap = 100;
+                }
+
+                // Capping
+                finalScore = rawScore > cap ? cap : rawScore;
+
+                // Rounding
+                const roundedResult = applyRounding(finalScore, roundSelect);
+                
+                // 테이블 뷰에서 원본 점수와 반올림 점수를 화살표 형태로 대조 노출
+                student.result = `
+                    <div class="flex items-center justify-center space-x-1.5 font-mono">
+                        <span class="text-slate-400 text-[11px]" title="반올림 전 원 계산점수">${rawScore.toFixed(3)}점</span>
+                        <span class="text-slate-400">→</span>
+                        <span class="text-indigo-700 font-bold text-xs" title="최종 반올림 결정점">${roundedResult.toFixed(roundSelect)}점</span>
+                    </div>
+                `;
+
+                // Live DOM update
+                const cell = document.getElementById(`b-res-${student.id}`);
+                if (cell) {
+                    cell.innerHTML = student.result;
+                }
+            });
+        }
+
+        // Export data to CSV compatible with Korean Excel
+        function exportBatchToCSV() {
+            calculateBatch(); // force sync calculation
+            
+            let csvContent = "\uFEFF"; // UTF-8 BOM
+            csvContent += "순번,학번,이름,산출유형,상세변수기록,인정비율(%),원계산값,최종인정점\n";
+
+            batchStudents.forEach((student, index) => {
+                let varText = "";
+                let rawScore = 0;
+                let cap = 100;
+                const rate = parseFloat(student.reason) || 0;
+
+                if (student.type === 'general') {
+                    cap = student.variable2 || 100;
+                    rawScore = student.variable1 * (rate / 100);
+                    varText = `기준점수:${student.variable1}/만점:${student.variable2}`;
+                } else if (student.type === 'all-absent') {
+                    const rPerf = preRoundPerfAverage(student.variable2);
+                    const rExam = preRoundExamAverage(student.variable3);
+                    cap = student.variable4 || 100;
+                    rawScore = student.variable1 * (rExam / rPerf) * (rate / 100);
+                    varText = `수행점수:${student.variable1}/수행학년평균(보정):${rPerf}/정기시험학년평균(보정):${rExam}`;
+                } else {
+                    rawScore = student.variable1 - 1;
+                    if (rawScore < 0) rawScore = 0;
+                    varText = `정기시험최하점:${student.variable1}`;
+                }
+
+                const finalScore = rawScore > cap ? cap : rawScore;
+                const roundSelectEl = document.getElementById('b-rounding');
+                const roundSelect = roundSelectEl ? parseInt(roundSelectEl.value) : 2;
+                const roundedResult = applyRounding(finalScore, roundSelect);
+
+                const rateText = student.type === 'unexcused' ? '-' : `${student.reason}%`;
+                csvContent += `${student.id},${student.num},${student.name},${student.type},"${varText}",${rateText},${rawScore.toFixed(5)},${roundedResult.toFixed(roundSelect)}점\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", "2026학년도_결시생_성적처리_산출기록.csv");
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // ==================== 수행평가 평균점수 계산 도우미 로직 ====================
+        function openHelperModal(context, studentId = null) {
+            modalContext = context;
+            targetBatchStudentId = studentId;
+            
+            // Reset modal values
+            const mTotal = document.getElementById('m-totalScore');
+            const mCount = document.getElementById('m-studentCount');
+            const mResult = document.getElementById('m-resultScore');
+            
+            if (mTotal) mTotal.value = '';
+            if (mCount) mCount.value = '';
+            if (mResult) mResult.innerText = '-';
+            
+            // Show modal
+            const helperModal = document.getElementById('helper-modal');
+            if (helperModal) helperModal.classList.remove('hidden');
+        }
+
+        function closeHelperModal() {
+            const helperModal = document.getElementById('helper-modal');
+            if (helperModal) helperModal.classList.add('hidden');
+        }
+
+        function calculateHelperScore() {
+            const total = parseFloat(document.getElementById('m-totalScore').value) || 0;
+            const count = parseFloat(document.getElementById('m-studentCount').value) || 0;
+            const mResult = document.getElementById('m-resultScore');
+            
+            if (mResult) {
+                if (total > 0 && count > 0) {
+                    const rawAvg = total / count;
+                    const preRounded = preRoundPerfAverage(rawAvg);
+                    mResult.innerText = `${preRounded.toFixed(1)} 점 (원점수: ${rawAvg.toFixed(4)})`;
+                } else {
+                    mResult.innerText = '-';
+                }
+            }
+        }
+
+        function applyHelperValue() {
+            const total = parseFloat(document.getElementById('m-totalScore').value) || 0;
+            const count = parseFloat(document.getElementById('m-studentCount').value) || 0;
+            
+            if (total <= 0 || count <= 0) {
+                alert('총합 점수와 응시생 수를 올바르게 입력해 주세요.');
+                return;
+            }
+
+            const rawAvg = total / count;
+            const preRounded = preRoundPerfAverage(rawAvg);
+
+            if (modalContext === 'single') {
+                const perfGradeAvgEl = document.getElementById('s-perfGradeAvg');
+                if (perfGradeAvgEl) {
+                    perfGradeAvgEl.value = preRounded;
+                    calculateSingle();
+                }
+            } else if (modalContext === 'batch' && targetBatchStudentId !== null) {
+                const student = batchStudents.find(s => s.id === targetBatchStudentId);
+                if (student) {
+                    student.variable2 = preRounded;
+                    renderBatchTable();
+                    calculateBatch();
+                }
+            }
+            closeHelperModal();
+        }
+    </script>
+</body>
+</html>
